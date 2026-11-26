@@ -2,6 +2,8 @@
 
 > **Trình tổng hợp mạch Logic (Quine-McCluskey + Petrick's Method), Phân tích PPA / Đường găng (Static Timing Analysis), Sinh mã Verilog-2001 & Trình phân tích dạng sóng `.vcd` kiểu GTKWave trên trình duyệt**
 > Vận hành trực tiếp trên **GitHub Pages** thông qua **Pyodide v0.26.2 (WebAssembly)** kết hợp HTML5 / CSS3 / Vanilla ES6 — **0% backend server, 0% bước build `npm`**, lõi thuật toán viết **100% bằng Python Standard Library** (`itertools`, `collections`, `re`, `dataclasses`, `json`).
+>
+> **Live Web EDA Demo (GitHub Pages / Pyodide WASM):** https://bondomaster.github.io/logic-synthesis-studio/
 
 ---
 

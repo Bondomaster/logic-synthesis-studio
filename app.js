@@ -83,27 +83,30 @@ async function initPyodideEngine() {
     studioState.pyodide = pyodide;
 
     setBootBar(60, "Đang nạp lõi tổng hợp ./src/eda_core.py vào pyodide.FS...");
-    pyodide.FS.mkdirTree("src");
+    await pyodide.runPythonAsync(`
+import os, sys
+os.makedirs("src", exist_ok=True)
+if os.getcwd() not in sys.path:
+    sys.path.insert(0, os.getcwd())
+    `);
 
+    const cwd = pyodide.FS.cwd();
     const initResp = await fetch("./src/__init__.py", { cache: "no-store" });
-    if (initResp.ok) {
-      pyodide.FS.writeFile("src/__init__.py", await initResp.text(), { encoding: "utf8" });
-    } else {
-      pyodide.FS.writeFile("src/__init__.py", "", { encoding: "utf8" });
-    }
+    const initCode = initResp.ok ? await initResp.text() : "";
+    pyodide.FS.writeFile(`${cwd}/src/__init__.py`, initCode);
 
     const coreResp = await fetch("./src/eda_core.py", { cache: "no-store" });
     if (!coreResp.ok) {
       throw new Error(`Không thể tải ./src/eda_core.py (HTTP ${coreResp.status})`);
     }
-    pyodide.FS.writeFile("src/eda_core.py", await coreResp.text(), { encoding: "utf8" });
+    const coreCode = await coreResp.text();
+    pyodide.FS.writeFile(`${cwd}/src/eda_core.py`, coreCode);
 
     setBootBar(85, "Đang khởi tạo thuật toán Quine-McCluskey + Petrick & VCD Parser...");
     await pyodide.runPythonAsync(`
-import sys
-if "." not in sys.path:
-    sys.path.insert(0, ".")
+import importlib
 from src import eda_core
+importlib.reload(eda_core)
     `);
     studioState.core = pyodide.globals.get("eda_core");
 
@@ -118,9 +121,12 @@ from src import eda_core
     }, 160);
   } catch (err) {
     console.error(err);
+    const errText =
+      (err && (err.message || (err.errno !== undefined ? `FS Errno ${err.errno}` : String(err)))) ||
+      String(err);
     setBootBar(
       100,
-      `Lỗi khởi tạo: ${err.message}. Hãy mở qua GitHub Pages hoặc chạy 'python -m http.server 8000'.`
+      `Lỗi khởi tạo: ${errText}. Hãy mở qua GitHub Pages hoặc chạy 'python -m http.server 8000'.`
     );
   }
 }
